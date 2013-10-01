@@ -2,7 +2,7 @@
 namespace Pmp\Sdk;
 
 require_once('Exception.php');
-require_once(dirname(__FILE__) . '/../../restagent/restagent.lib.php');
+require_once(dirname(__FILE__) . '/../../guzzle.phar');
 use restagent\Request as Request;
 
 class AuthClient
@@ -63,24 +63,26 @@ class AuthClient
         $hash = base64_encode($this->clientId . ":" . $this->clientSecret);
 
         // GET request needs an authorization header with the generated client hash
-        $request = new Request();
-        $response = $request->header('Authorization', 'CLIENT_CREDENTIALS ' . $hash)
-                            ->get($uri);
+        $request = new \Guzzle\Http\Client();
+        $response = $request->get($uri, array(
+            'Authorization' => 'CLIENT_CREDENTIALS ' . $hash
+        ))->send();
 
         // Response code must be 200 and data must be found in response in order to continue
-        if ($response['code'] != 200 || empty($response['data'])) {
+        $body = $response->getBody();
+        if ($response->getStatusCode() != 200 || empty($body)) {
             $err = "Got non-HTTP-200 and/or empty response from the authentication server";
             $exception = new Exception($err);
-            $exception->setDetails($response);
+            $exception->setDetails($response->getReasonPhrase());
             throw $exception;
             return;
         }
 
-        $data = json_decode($response['data']);
+        $data = json_decode($body);
         if (empty($data->access_token)) {
             $err = "Got unexpected empty token from the authentication server";
             $exception = new Exception($err);
-            $exception->setDetails($response);
+            $exception->setDetails($response->getReasonPhrase());
             throw $exception;
             return;
         }
@@ -103,15 +105,16 @@ class AuthClient
         $hash = base64_encode($this->clientId . ":" . $this->clientSecret);
 
         // GET request needs an authorization header with the generated client hash
-        $request = new Request();
-        $response = $request->header('Authorization', 'CLIENT_CREDENTIALS ' . $hash)
-            ->delete($uri);
+        $request = new \Guzzle\Http\Client();
+        $response = $request->delete($uri, array(
+            'Authorization' => 'CLIENT_CREDENTIALS ' . $hash
+        ))->send();
 
         // Response code must be 204 in order to be successful
-        if ($response['code'] != 204) {
+        if ($response->getStatusCode() != 204) {
             $err = "Got unexpected response code from the authentication server";
             $exception = new Exception($err);
-            $exception->setDetails($response);
+            $exception->setDetails($response->getReasonPhrase());
             throw $exception;
             return false;
         }

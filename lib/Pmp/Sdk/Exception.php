@@ -10,7 +10,7 @@ class Exception extends \Exception
         return $this->details;
     }
 
-    public function setDetails(array $details) {
+    public function setDetails($details) {
         $this->details = $details;
     }
 } 
