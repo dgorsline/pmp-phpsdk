@@ -496,6 +496,7 @@ class CollectionDocJson
         unset($this->href);
         unset($this->attributes);
         unset($this->links);
+        unset($this->embedded);
         unset($this->items);
         unset($this->error);
 
@@ -514,6 +515,11 @@ class CollectionDocJson
 
         if (!empty($this->href)) {
             $document->href = $this->href;
+        }
+
+        if (!empty($this->embedded))
+        {
+            $document->embedded = $this->embedded;
         }
 
         return $document;
